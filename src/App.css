@@ -1,0 +1,26 @@
+.App {
+  text-align: center;
+  height: 100vh;
+  background-image: url('images/starfield.gif');
+  background-size: cover;
+}
+
+.initial-state {
+  
+  height: 100%;
+}
+
+.typewriter h1 {
+  padding-top: 20%;
+  color: #fff;
+  font-family: monospace;
+  overflow: hidden;
+  white-space: nowrap; 
+  letter-spacing: .15em; 
+  
+}
+
+
+
+
+
