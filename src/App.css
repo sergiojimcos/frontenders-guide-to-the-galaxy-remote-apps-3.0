@@ -12,15 +12,13 @@
 
 .typewriter h1 {
   padding-top: 20%;
-  color: #fff;
+  color: #000;
   font-family: monospace;
   overflow: hidden;
   white-space: nowrap; 
   letter-spacing: .15em; 
-  
 }
 
-
-
-
-
+.card-container {
+  padding-top: 10%;
+}
