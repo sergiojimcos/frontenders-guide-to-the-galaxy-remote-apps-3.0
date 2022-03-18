@@ -1,5 +1,5 @@
 import  ReactDOM  from 'react-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import ClayButton from '@clayui/button';
 import ClayLayout from "@clayui/layout";
@@ -13,16 +13,13 @@ const spritemap = "https://cdn.jsdelivr.net/npm/@clayui/css/lib/images/icons/ico
 
 const {Liferay, themeDisplay} = window;
 
-const questionArray = []
-
-
 function App() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [valueAnswer, setValueAnswer] = useState('');
-	const [showScore, setShowScore] = useState(false);
 	const [score, setScore] = useState(0);
   const [showHint, setShowHint] = useState(false);
-  
+	const [showScore, setShowScore] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [valueAnswer, setValueAnswer] = useState('');  
   const [visibleForm, setVisibleForm] = useState(false);
 
   const handleAnswerOptionClick = (correctAnswer) => {
@@ -33,7 +30,7 @@ function App() {
     setValueAnswer('');
 		const nextQuestion = currentQuestion + 1;
 
-		if (nextQuestion <= questionArray[0].length) {
+		if (nextQuestion <= questions.length) {
 			setCurrentQuestion(nextQuestion);
 		} else {
 			setShowScore(true);
@@ -48,14 +45,16 @@ function App() {
     setScore(score - 5);
   }
   
-  function setQuestions () {
+  useEffect(() => {
     Liferay.Util.fetch("/o/c/drivinglicenses")
-      .then((response) => response.json())
-      .then(({items}) => {
-        if (questionArray.length === 0) questionArray.push(items);
-        setVisibleForm(true);  
-      });
-  }
+    .then((response) => response.json())
+    .then(({items}) => {
+      if (questions.length === 0) {
+        setQuestions(items);
+        
+      }
+    });
+  }, []);
 
   return (
     <div className="App">
@@ -65,8 +64,21 @@ function App() {
             <h1>WELCOME TO SPACESHIP DRIVING LESSON</h1>
           </div>
           
-          <ClayButton className='starting-button' spritemap={spritemap} onClick={setQuestions}>
-            Let's Start
+          <ClayButton
+            className="starting-button"
+            disabled={questions.length === 0}
+            spritemap={spritemap}
+            onClick={() => {
+              setVisibleForm(true);
+            }}>
+              {questions.length === 0 ?
+              (
+                <>Loading...</>
+              ):
+              (
+                <>Let's Start</>
+              )
+            }
           </ClayButton>
         </div>
       )}
@@ -78,27 +90,27 @@ function App() {
                 <ClayCard>
                   <ClayCard.Body>
                     <ClayCard.Description displayType="title">
-                        {questionArray[0][currentQuestion].question}
+                        {questions[currentQuestion].question}
                     </ClayCard.Description>
                     <ClayCard.Description truncate={false} displayType="text">
                     <ClayRadioGroup onSelectedValueChange={val => setValueAnswer(val)} selectedValue={valueAnswer}>
 
-                      <ClayRadio label={questionArray[0][currentQuestion].optionA} value="A" />
-			                <ClayRadio label={questionArray[0][currentQuestion].optionB} value="B" />
-			                <ClayRadio label={questionArray[0][currentQuestion].optionC} value="C" />
+                      <ClayRadio label={questions[currentQuestion].optionA} value="A" />
+			                <ClayRadio label={questions[currentQuestion].optionB} value="B" />
+			                <ClayRadio label={questions[currentQuestion].optionC} value="C" />
                     
                     </ClayRadioGroup>
                     </ClayCard.Description>
-                    {currentQuestion < questionArray[0].length - 1 && (
-                      <ClayButton onClick={() => handleAnswerOptionClick(questionArray[0][currentQuestion].correctAnswer.name)}>{"Next"}</ClayButton>
+                    {currentQuestion < questions.length - 1 && (
+                      <ClayButton onClick={() => handleAnswerOptionClick(questions[currentQuestion].correctAnswer.name)}>{"Next"}</ClayButton>
                     )}
-                    {currentQuestion === questionArray[0].length - 1 && (
+                    {currentQuestion === questions.length - 1 && (
                       <ClayButton>{"Finish"}</ClayButton>
                     )}
                     <ClayButton className='ml-2' displayType='secondary' onClick={handleHint}>{"Hint"}</ClayButton>
                     {showHint && (
                       <ClayCard.Caption>
-                        <ClayLabel displayType="success">{questionArray[0][currentQuestion].hint}</ClayLabel>
+                        <ClayLabel displayType="success">{questions[currentQuestion].hint}</ClayLabel>
                       </ClayCard.Caption>
                     )}
                     
