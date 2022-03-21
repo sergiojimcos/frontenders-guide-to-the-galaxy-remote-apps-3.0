@@ -1,11 +1,12 @@
 import  ReactDOM  from 'react-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './App.css';
 import ClayButton from '@clayui/button';
 import ClayLayout from "@clayui/layout";
 import { ClayRadioGroup, ClayRadio } from "@clayui/form";
 import ClayCard from "@clayui/card";
-import ClayLabel from '@clayui/label'
+import ClayLabel from '@clayui/label';
+import ClayForm, {ClayInput} from '@clayui/form';
 
 import "@clayui/css/lib/css/atlas.css";
 
@@ -13,14 +14,22 @@ const spritemap = "https://cdn.jsdelivr.net/npm/@clayui/css/lib/images/icons/ico
 
 const {Liferay, themeDisplay} = window;
 
+const CUSTOM_EVENT_RECORD_APP = 'customEventRecordApp';
+
+
 function App() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
 	const [score, setScore] = useState(0);
   const [showHint, setShowHint] = useState(false);
-	const [showScore, setShowScore] = useState(false);
   const [questions, setQuestions] = useState([]);
-  const [valueAnswer, setValueAnswer] = useState('');  
-  const [visibleForm, setVisibleForm] = useState(false);
+  const [valueAnswer, setValueAnswer] = useState('');
+  const [showStartingForm, setShowStartingForm] = useState(true)  
+  const [showScoreForm, setShowScoreForm] = useState(false);
+  const [showVisibleForm, setShowVisibleForm] = useState(false);
+  const [namePlayer, setNamePlayer] = useState("");
+
+  
+  const inputRef = useRef();
 
   const handleAnswerOptionClick = (correctAnswer) => {
     if (correctAnswer === valueAnswer.slice(-1)){
@@ -32,9 +41,6 @@ function App() {
 
 		if (nextQuestion <= questions.length) {
 			setCurrentQuestion(nextQuestion);
-		} else {
-			setShowScore(true);
-
 		}
 
     setShowHint(false);
@@ -43,6 +49,18 @@ function App() {
   function handleHint () {
     setShowHint(true);
     setScore(score - 5);
+  }
+
+  const handleFinishEvent = (correctAnswer) => {
+    if (correctAnswer === valueAnswer.slice(-1)){
+			setScore(score + 10);
+		}
+
+    Liferay.fire(CUSTOM_EVENT_RECORD_APP, {namePlayer, score});
+
+    setShowVisibleForm(false);
+    setShowScoreForm(true);
+     
   }
   
   useEffect(() => {
@@ -58,10 +76,22 @@ function App() {
 
   return (
     <div className="App">
-      {!visibleForm &&(
+      {showStartingForm &&(
         <div className='initial-state'>
           <div className="typewriter">
             <h1>WELCOME TO SPACESHIP DRIVING LESSON</h1>
+          </div>
+
+          <div className='input-form'>
+            <ClayForm.Group small>
+                
+                <ClayInput
+                  id="basicInputText"
+                  placeholder="Insert your name here"
+                  type="text"
+                  ref={inputRef}
+                />
+            </ClayForm.Group>
           </div>
           
           <ClayButton
@@ -69,7 +99,14 @@ function App() {
             disabled={questions.length === 0}
             spritemap={spritemap}
             onClick={() => {
-              setVisibleForm(true);
+              if (inputRef.current.value === ""){
+                setShowVisibleForm(false);
+              } else {
+                setShowVisibleForm(true);
+                setShowStartingForm(false)
+                setNamePlayer(inputRef.current.value);
+              }
+                
             }}>
               {questions.length === 0 ?
               (
@@ -83,13 +120,13 @@ function App() {
         </div>
       )}
 
-      {visibleForm && (
+      {showVisibleForm && (
         <div className='card-container'> 
           <ClayLayout.ContainerFluid>
             <ClayLayout.Row justify="center">
                 <ClayCard>
                   <ClayCard.Body>
-                    <ClayCard.Description displayType="title">
+                    <ClayCard.Description displayType="title" style={{fontSize: 20}}>
                         {questions[currentQuestion].question}
                     </ClayCard.Description>
                     <ClayCard.Description truncate={false} displayType="text">
@@ -101,16 +138,20 @@ function App() {
                     
                     </ClayRadioGroup>
                     </ClayCard.Description>
+
                     {currentQuestion < questions.length - 1 && (
                       <ClayButton onClick={() => handleAnswerOptionClick(questions[currentQuestion].correctAnswer.name)}>{"Next"}</ClayButton>
                     )}
+
                     {currentQuestion === questions.length - 1 && (
-                      <ClayButton>{"Finish"}</ClayButton>
+                      <ClayButton onClick={() => handleFinishEvent(questions[currentQuestion].correctAnswer.name)}>{"Finish"}</ClayButton>
                     )}
+
                     <ClayButton className='ml-2' displayType='secondary' onClick={handleHint}>{"Hint"}</ClayButton>
+                    
                     {showHint && (
                       <ClayCard.Caption>
-                        <ClayLabel displayType="success">{questions[currentQuestion].hint}</ClayLabel>
+                        <ClayLabel displayType="success" style={{fontSize:12}}>{questions[currentQuestion].hint}</ClayLabel>
                       </ClayCard.Caption>
                     )}
                     
@@ -121,6 +162,16 @@ function App() {
           </ClayLayout.ContainerFluid>
         </div>
           )}
+
+      {showScoreForm && (
+       <div className='initial-state'>
+        <div className="typewriter">
+          <h1>CONGRATS! YOUR QUIZ HAS BEEN SENT</h1>
+          
+        </div>
+        
+        </div>
+      )}
     </div>
   );
 }

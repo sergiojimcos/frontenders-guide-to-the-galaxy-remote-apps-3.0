@@ -9,6 +9,7 @@
     "@clayui/form": "^3.49.0",
     "@clayui/label": "^3.45.0",
     "@clayui/layout": "^3.40.0",
+    "@clayui/table": "^3.40.0",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",

@@ -6,12 +6,18 @@
 }
 
 .initial-state {
-  
   height: 100%;
 }
 
+.input-form {
+  justify-content: center;
+  padding-right: 40%;
+  padding-left: 40%;
+
+}
+
 .typewriter h1 {
-  padding-top: 20%;
+  padding-top: 10%;
   color: #000;
   font-family: monospace;
   overflow: hidden;
