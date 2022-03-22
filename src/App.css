@@ -11,8 +11,8 @@
 
 .input-form {
   justify-content: center;
-  padding-right: 40%;
-  padding-left: 40%;
+  padding-right: 35%;
+  padding-left: 35%;
 
 }
 
@@ -22,7 +22,6 @@
   font-family: monospace;
   overflow: hidden;
   white-space: nowrap; 
-  letter-spacing: .15em; 
 }
 
 .card-container {

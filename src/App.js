@@ -1,13 +1,14 @@
 import  ReactDOM  from 'react-dom';
 import { useEffect, useState, useRef } from 'react';
-import './App.css';
+import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
+import ClayCard from "@clayui/card";
+import ClayForm, {ClayInput} from '@clayui/form';
+import ClayLabel from '@clayui/label';
 import ClayLayout from "@clayui/layout";
 import { ClayRadioGroup, ClayRadio } from "@clayui/form";
-import ClayCard from "@clayui/card";
-import ClayLabel from '@clayui/label';
-import ClayForm, {ClayInput} from '@clayui/form';
 
+import './App.css';
 import "@clayui/css/lib/css/atlas.css";
 
 const spritemap = "https://cdn.jsdelivr.net/npm/@clayui/css/lib/images/icons/icons.svg";
@@ -27,23 +28,31 @@ function App() {
   const [showScoreForm, setShowScoreForm] = useState(false);
   const [showVisibleForm, setShowVisibleForm] = useState(false);
   const [namePlayer, setNamePlayer] = useState("");
+  const [toastItems, setToastItems] = useState([]);
 
-  
   const inputRef = useRef();
 
   const handleAnswerOptionClick = (correctAnswer) => {
-    if (correctAnswer === valueAnswer.slice(-1)){
+    if (isCorrect(correctAnswer)){
 			setScore(score + 10);
-		}
+      Liferay.fire(CUSTOM_EVENT_RECORD_APP, {namePlayer, score: score + 10});
+		
+    } else {
+      Liferay.fire(CUSTOM_EVENT_RECORD_APP, {namePlayer, score: score});
+    
+    }
+    const nextQuestion = currentQuestion + 1;
+    
+    if (currentQuestion < questions.length - 1) {
+			setCurrentQuestion(nextQuestion);
+		} else {
+      setShowVisibleForm(false);
+      setShowScoreForm(true);
+    }
 
     setValueAnswer('');
-		const nextQuestion = currentQuestion + 1;
-
-		if (nextQuestion <= questions.length) {
-			setCurrentQuestion(nextQuestion);
-		}
-
     setShowHint(false);
+
 	};
 
   function handleHint () {
@@ -51,17 +60,14 @@ function App() {
     setScore(score - 5);
   }
 
-  const handleFinishEvent = (correctAnswer) => {
-    if (correctAnswer === valueAnswer.slice(-1)){
-			setScore(score + 10);
-		}
+  function isCorrect (correctAnswer) {
+    if (correctAnswer ===  valueAnswer.slice(-1)) {
+      return true;
+    }
 
-    Liferay.fire(CUSTOM_EVENT_RECORD_APP, {namePlayer, score});
-
-    setShowVisibleForm(false);
-    setShowScoreForm(true);
-     
+    return false;
   }
+  
   
   useEffect(() => {
     Liferay.Util.fetch("/o/c/drivinglicenses")
@@ -72,7 +78,7 @@ function App() {
         
       }
     });
-  }, []);
+  },[]);
 
   return (
     <div className="App">
@@ -101,6 +107,7 @@ function App() {
             onClick={() => {
               if (inputRef.current.value === ""){
                 setShowVisibleForm(false);
+                setToastItems([...toastItems, Math.random() * 100])
               } else {
                 setShowVisibleForm(true);
                 setShowStartingForm(false)
@@ -126,10 +133,11 @@ function App() {
             <ClayLayout.Row justify="center">
                 <ClayCard>
                   <ClayCard.Body>
-                    <ClayCard.Description displayType="title" style={{fontSize: 20}}>
+                    <ClayCard.Description displayType="title" style={{fontSize: 20, marginBottom:20}}>
                         {questions[currentQuestion].question}
                     </ClayCard.Description>
-                    <ClayCard.Description truncate={false} displayType="text">
+                    
+                    <ClayCard.Description truncate={false} displayType="text" >
                     <ClayRadioGroup onSelectedValueChange={val => setValueAnswer(val)} selectedValue={valueAnswer}>
 
                       <ClayRadio label={questions[currentQuestion].optionA} value="A" />
@@ -144,14 +152,14 @@ function App() {
                     )}
 
                     {currentQuestion === questions.length - 1 && (
-                      <ClayButton onClick={() => handleFinishEvent(questions[currentQuestion].correctAnswer.name)}>{"Finish"}</ClayButton>
+                      <ClayButton onClick={() => handleAnswerOptionClick(questions[currentQuestion].correctAnswer.name)}>{"Finish"}</ClayButton>
                     )}
 
                     <ClayButton className='ml-2' displayType='secondary' onClick={handleHint}>{"Hint"}</ClayButton>
                     
                     {showHint && (
                       <ClayCard.Caption>
-                        <ClayLabel displayType="success" style={{fontSize:12}}>{questions[currentQuestion].hint}</ClayLabel>
+                        <ClayLabel displayType="success" style={{fontSize:12, marginTop: 20}}>{questions[currentQuestion].hint}</ClayLabel>
                       </ClayCard.Caption>
                     )}
                     
@@ -172,6 +180,23 @@ function App() {
         
         </div>
       )}
+
+      <ClayAlert.ToastContainer>
+        {toastItems.map(value => (
+          <ClayAlert
+            autoClose={5000}
+            displayType="danger"
+            key={value}
+            onClose={() => {
+              setToastItems(prevItems =>
+                prevItems.filter(item => item !== value)
+              );
+            }}
+            spritemap={spritemap}
+            title={"Error:"}
+          >Please, insert a valid name</ClayAlert>
+        ))}
+      </ClayAlert.ToastContainer>
     </div>
   );
 }
